@@ -126,13 +126,13 @@ If your environment is already **deeply customized or you require special guardr
 - **Design**: Each bank’s VPC is a spoke connected to the TGW in a central “shared services” VPC/account.  
 - **Isolation**: You can control routing so each bank’s VPC only communicates with specified shared resources, preventing inter-bank traffic.  
 - **Scalability**: Supports many VPC attachments (up to thousands), with centralized route table management.  
-- **Availability**: Multi-AZ redundancy is built in. If one AZ goes down, TGW routes through another.  
-- **Use Case**: Ideal when you need broader Layer 3 IP connectivity between spoke VPCs and a central hub (or on-premises) with full control over routes and security inspection (e.g., Network Firewall).
+- **Availability**: Multi-AZ redundancy is built in. If one AZ goes down, routes through another.  
+- **Use Case**: Ideal when you need broader Layer 3 IP connectivity between spoke VPCs and a central hub (or on-premises) with full control over routes and security.
 
 **AWS PrivateLink**  
 - **Design**: Exposes specific services (e.g., an application running behind an NLB) from a “central VPC” to each bank’s VPC.  
 - **Isolation**: Each bank’s VPC only “sees” that private endpoint for the one service; no Layer 3 connectivity to the rest of the central VPC.  
-- **Granularity**: Allows very strict, service-level access — the bank can only call that one endpoint, not the entire VPC CIDR.  
+- **Scalability**: Allows very strict, service-level access — the bank can only call that one endpoint, not the entire VPC CIDR.  
 - **Simplicity**: Reduces the need for managing multiple route tables; just set up VPC endpoints for each service.  
 - **Use Case**: Best when banks only need limited, API-like access to a shared service and do not require full network-level routing.
 
@@ -163,7 +163,7 @@ In short, **Transit Gateway** is best for broader, network-level connectivity am
 - **Appliance Mode** in the TGW ensures both outbound and return traffic go through the firewall for stateful inspection.
 
 **Key Points:**
-- Blocks malicious or non-compliant traffic.  
+- Blocks malicious traffic.  
 - Central rule management; no need for multiple firewall appliances.  
 - Defense against lateral movement (e.g., from a compromised VPC).
 
@@ -199,7 +199,7 @@ Several AWS security services are used **org-wide**:
    - Central delegated admin sees all findings.
 
 3. **Amazon GuardDuty**  
-   - ML-based threat detection (suspicious activity, botnet communications, etc.).  
+   - ML-based threat detection.  
    - Auto-enrolled for new accounts via AWS Organizations.  
    - Central aggregator collects all findings.
 
@@ -218,5 +218,38 @@ Several AWS security services are used **org-wide**:
 
 All these tools provide **continuous compliance** for frameworks like PCI-DSS, SOC2, etc.
 
+# 8. AWS Organizations and Service Control Policies (SCPs)
+- A **single AWS Organization** manages all accounts.  
+- **Organizational Units (OUs)** separate bank accounts from core infrastructure.  
+- **SCPs** apply top-level guardrails. Examples:
+  - **Deny** creation of new TGWs or VPC peerings in bank accounts.  
+  - **Prevent disabling** security services (GuardDuty, Security Hub, Config).  
+  - **Restrict** IAM usage (e.g., no local IAM user creation).  
+  - **Mandatory encryption** for storage.
+ 
+  **Benefits:**
+- Enforces security and compliance even if local admin privileges are high.  
+- **Auto-application**: new accounts in an OU inherit the same SCPs.
 
 
+
+
+# 9. Automated Onboarding with Terraform
+
+### 9.1 Overview
+1. **Create a new AWS Account** via the **Terraform AWS Organizations** provider.  
+2. **Enable AWS SSO** permissions for the new account (Admin, ReadOnly, etc.).  
+3. **Set up a VPC** in the new account with a **TGW attachment** (unique CIDR, subnets in multiple AZs).  
+4. **Apply Security Baseline** (GuardDuty, Config, Security Hub).  
+5. **Verify** connectivity and isolation, then hand over to the bank’s team.
+
+### 9.2 Example Terraform Snippets
+
+**Creating a new AWS Account**:
+```hcl
+resource "aws_organizations_account" "new_bank" {
+  name   = "BankX Account"
+  email  = "aws-admin@bankx.com"
+  parent_id = aws_organizations_organizational_unit.bank_ou.id
+  iam_user_access_to_billing = "DENY"
+}
