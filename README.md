@@ -71,7 +71,7 @@ This document describes a **multi-account architecture** in AWS designed to host
 
 The goal is to meet **bank-grade security and compliance** requirements while making management straightforward and scalable.
 
-# 2. Centralized Identity and Access Management (AWS SSO)
+# 2. Centralized Identity and Access Management 
 
 - **AWS IAM Identity Center (AWS SSO)** is used for centralized authentication.  
 - Each bank’s employees see **only** their own AWS account(s) upon login.  
@@ -117,7 +117,7 @@ In summary, **AWS Identity Center** (SSO) manages the identity and access layer,
 If your environment is already **deeply customized or you require special guardrails** not supported by Control Tower, the manual AWS SSO + Organizations route may be more flexible—but also more labor-intensive and prone to misconfigurations. 
 
 
-## 3. Network Architecture 
+# 3. Network Architecture 
 
 **Transit Gateway (TGW) – Hub-and-Spoke Model**  
 - **Design**: Each bank’s VPC is a spoke connected to the TGW in a central “shared services” VPC/account.  
@@ -153,7 +153,7 @@ If your environment is already **deeply customized or you require special guardr
 In short, **Transit Gateway** is best for broader, network-level connectivity among multiple VPCs, while **AWS PrivateLink** offers more service-specific access with minimal exposure. Depends on the details, We can combine both — using Transit Gateway for general connectivity and PrivateLink for specific private services. 
 
 
-## 4. Traffic Inspection with AWS Network Firewall
+# 4. Traffic Inspection with AWS Network Firewall
 - A **central AWS Network Firewall** in an **inspection VPC** inspects traffic between each bank’s VPC and the hub.  
 - The firewall is **stateful**, supports **deep packet inspection**, and can enforce custom rules.  
 - Deployed in **multiple AZs** for high availability.  
@@ -164,8 +164,7 @@ In short, **Transit Gateway** is best for broader, network-level connectivity am
 - Central rule management; no need for multiple firewall appliances.  
 - Defense against lateral movement (e.g., from a compromised VPC).
 
-
-## 5. High Availability and Multi-AZ Design
+# 5. High Availability and Multi-AZ Design
 - **AWS Transit Gateway** is a managed HA service across AZs.  
 - Each VPC attachment uses **subnets in at least two AZs**.  
 - **Network Firewall endpoints** are also in multiple AZs.  
@@ -173,7 +172,7 @@ In short, **Transit Gateway** is best for broader, network-level connectivity am
 - A single TGW is typically sufficient for **regional HA**.
 
 
-## 6. Multi-Region Disaster Recovery (Optional)
+# 6. Multi-Region Disaster Recovery (Optional)
 To handle region-wide outages:
 - Deploy a **similar hub-and-spoke** in a **secondary region**.  
 - **AWS SSO** is global; same identity management across regions.  
@@ -184,7 +183,7 @@ To handle region-wide outages:
 - Enable **GuardDuty**, **Config**, and **Security Hub** in **both** regions.
 
 
-## 7. Security and Compliance Enforcement
+# 7. Security and Compliance Enforcement
 Several AWS security services are used **org-wide**:
 
 1. **AWS Config**  
