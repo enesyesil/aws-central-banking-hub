@@ -7,6 +7,7 @@
 
 A company that acquires banks needs a way to connect each bank’s AWS account to a central VPC. This allows employees from different banks to log into a central identity system and access shared resources. However, the banks must remain isolated from each other for security and compliance.
 
+
 To achieve this, Here is the list of Requirements:
 
 
@@ -17,7 +18,7 @@ This document describes a **multi-account architecture** in AWS designed to host
 - Enforce strict isolation (no direct traffic) between bank accounts.  
 - Centralize security, compliance, and identity management.  
 - Achieve high availability across multiple Availability Zones (AZs), and optionally multiple regions.  
-- Automate onboarding of new bank accounts with **Terraform**.  
+- Automate onboarding of new bank accounts with **Terraform**(Optional).  
 
 The goal is to meet **bank-grade security and compliance** requirements while making management straightforward and scalable.
 
