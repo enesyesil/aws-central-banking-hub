@@ -249,7 +249,9 @@ After evaluating multiple design options, we have chosen the following architect
 - Since accounts **already exist**, Control Tower **cannot be used**.  
 - Instead, we enforce **Service Control Policies (SCPs)** and AWS security practices manually.  
 - Security services such as **GuardDuty, Security Hub, and AWS Config** are centrally managed.  
-- Logging is centralized via **CloudTrail, VPC Flow Logs, and AWS Config Aggregator**.  
+- Logging is centralized via **CloudTrail, VPC Flow Logs, and AWS Config Aggregator**.
+
+  ![Digram](/aws-identity.png)
 
 ### **3. AWS Transit Gateway (TGW) for VPC Connectivity**  
 - **Transit Gateway** acts as the **central networking hub**, connecting bank accounts to the shared identity services.  
