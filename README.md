@@ -64,11 +64,10 @@ The goal is to meet **bank-grade security and compliance** requirements while ma
 5. [High Availability and Multi-AZ Design](#high-availability-and-multi-az-design)  
 6. [Multi-Region Disaster Recovery (Optional)](#multi-region-disaster-recovery-optional)  
 7. [Security and Compliance Enforcement](#security-and-compliance-enforcement)  
-8. [AWS Organizations and Service Control Policies (SCPs)](#aws-organizations-and-service-control-policies-scps)  
-9. [Automated Onboarding with Terraform](#automated-onboarding-with-terraform)  
+8. [AWS Organizations and Service Control Policies (SCPs)](#aws-organizations-and-service-control-policies-scps)   
 10. [Best Practices and Additional Notes](#best-practices-and-additional-notes)
 11. [Optional: GitHub Enterprise Self-Hosted on AWS & GitOps Pipeline](#optional-github-enterprise-self-hosted-on-aws--gitops-pipeline)
-12. [Choosing Between Third-Party Git Services and Self-Hosted GitOps for Banks](#choosing-between-third-party-git-services-and-self-hosted-gitops-for-banks)
+12. [Optional Choosing Between Third-Party Git Services and Self-Hosted GitOps for Banks](#choosing-between-third-party-git-services-and-self-hosted-gitops-for-banks)
 13. [Conclusion](#conclusion)  
 14. [References](#references)
 
@@ -233,24 +232,36 @@ All these tools provide **continuous compliance** for frameworks like PCI-DSS, S
 - **Auto-application**: new accounts in an OU inherit the same SCPs.
 
 
+  
+
+# 9. Conclusion 
+
+After evaluating multiple design options, we have chosen the following architecture and services for the **Project**:
+
+### **1. AWS Identity Center (AWS SSO) for Centralized Access Management**  
+- Provides **centralized login** for all AWS accounts.  
+- Enforces **MFA, session policies, and role-based access control**.  
+- Eliminates the need for IAM users in individual AWS accounts.  
+- Works with both **existing** and **newly created** AWS accounts.  
+
+### **2. Manual AWS Organizations Governance (Instead of Control Tower)**  
+*(Instead of Control Tower because we assume that the AWS accounts and customizations already exist)*  
+- Since accounts **already exist**, Control Tower **cannot be used**.  
+- Instead, we enforce **Service Control Policies (SCPs)** and AWS security practices manually.  
+- Security services such as **GuardDuty, Security Hub, and AWS Config** are centrally managed.  
+- Logging is centralized via **CloudTrail, VPC Flow Logs, and AWS Config Aggregator**.  
+
+### **3. AWS Transit Gateway (TGW) for VPC Connectivity**  
+- **Transit Gateway** acts as the **central networking hub**, connecting bank accounts to the shared identity services.  
+- **Ensures isolation** between banks while allowing access to the central VPC.  
+- Provides **multi-AZ high availability** and **scalability** for future acquisitions.  
+
+### **Final Design Summary**  
+- **Identity & Access Management** → **AWS IAM Identity Center (SSO)**  
+- **Account Governance & Compliance** → **Manual AWS Organizations SCPs, Config, Security Hub** *(Instead of Control Tower because AWS accounts already exist)*  
+- **Network Architecture** → **AWS Transit Gateway (Hub-and-Spoke Model)**  
+- **Secure Service Exposure** → **AWS PrivateLink for shared authentication and logging services**  
+
+This **final architecture ensures **security, compliance, and scalability**, allowing secure access management while keeping accounts isolated.  
 
 
-# 9. Automated Onboarding with Terraform
-
-### 9.1 Overview
-1. **Create a new AWS Account** via the **Terraform AWS Organizations** provider.  
-2. **Enable AWS SSO** permissions for the new account (Admin, ReadOnly, etc.).  
-3. **Set up a VPC** in the new account with a **TGW attachment** (unique CIDR, subnets in multiple AZs).  
-4. **Apply Security Baseline** (GuardDuty, Config, Security Hub).  
-5. **Verify** connectivity and isolation, then hand over to the bank’s team.
-
-### 9.2 Example Terraform Snippets
-
-**Creating a new AWS Account**:
-```hcl
-resource "aws_organizations_account" "new_bank" {
-  name   = "BankX Account"
-  email  = "aws-admin@bankx.com"
-  parent_id = aws_organizations_organizational_unit.bank_ou.id
-  iam_user_access_to_billing = "DENY"
-}
